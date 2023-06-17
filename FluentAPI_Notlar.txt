@@ -1,0 +1,49 @@
+Domain katmanýnda varlýklarýmýzý tanýmlýyoruz.
+
+PersistLayer de bunun kalýcýlýkla ilgili olan yani veritabaný operasyonlarýnýn bulunduðu kodlarý yazýyoruz.
+
+WinFormUI görsel katmandaki operasyonlarý yönetiyor.
+
+Category ve Product Id leri Baseentity den geliyor. Property olarak yok.
+Product ta CategoryId property si tanýmladým ama Category de Property olarka yok. BaseEntity den geliyor.
+Burda Conventions çalýþmaz. Bunu özellikle birdirmemiz gerekiyor.
+Mimari yaklaþýmlarda Damin de attribute ile yapýlmaz. Bu yapýlanlarmalar PersistLayerde FluentAPI ile yapýlacak.
+
+Category ve Product nesneleri ve property lerini ekledik ve migration yaptýk.
+Hata aldýk.
+Microsoft.EntityFrameworkCore.Design paketini WinFormUI a kurmamýz lazým
+Tekrar migration ekledik
+Hata aldýk.
+EFCorePersistLayer ýn winformUý a referans edildiðinden emin ol diyor.
+WinFormUI=> Dependencis=> add project references + EFCorePersistLayer
+
+Update-Database yaptýk. Categories tablosundaki Id kolonu  ile Products kolonundaki CategoryId Foreignkey olarak ayarlamýþ
+ýnsert update specification da delete=cascade, update=no action tanýmlý
+int notnull deðil nullable,nvarcharmax yapmak vb gibi iþlemleri 
+2 yöntemle yapabiliriz.
+
+1- DataAnnotations => .Net Frameworkte var olan attribute frameworkü
+2- FluentAPI    => ModelBuilder ile
+
+
+** IncludeTax ý veritabanýnda saklama demiþ olduk.
+modelBuilder.Entity<Product>().Ignore(c => c.IncludeTax);    
+
+
+** Price alanýný decimal(9,2) ve IsRequired(); ile zorunlu alan yaptýk. IsRequired(); true geliyor. Zorunlu olmasýn dersek False yapabiliriz.IsRequired(false);
+modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(9,2)").IsRequired();
+
+** Product ýn Name sinin uzunluðunu max uzunluðunu 128 yaptýk ve zorunlu olmasýný tanýmladýk.
+modelBuilder.Entity<Product>().Property(p => p.Name).HasMaxLength(128).IsRequired();
+
+
+** Bire Çok Ýliþki
+modelBuilder.Entity<Product>()
+				.HasOne<Category>(p => p.Category)   / Az olan taraf => entitim Product bir Category e sahiptir.HasOne geriye navigatorbuilder dönüyor.
+				.WithMany(c => c.Products)           / Çok olan taraf ile => bu category nin product tarafý Çok, birçok producta sahiptir.
+				.HasForeignKey(p => p.CategoryId);   / Bu iliþki þu  ForeignKey üzerine kurulur.
+
+
+
+
+
