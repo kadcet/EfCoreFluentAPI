@@ -4,9 +4,17 @@ PersistLayer de bunun kalýcýlýkla ilgili olan yani veritabaný operasyonlarýnýn b
 
 WinFormUI görsel katmandaki operasyonlarý yönetiyor.
 
+Product a Category türünden propery tanýmladýk.
+public Category Category { get; set; }
+bunu neden koyduk.
+Bir Product ý talep ettiðim zaman kategoriside gelsin diye. Navigation Property
+Product ý çektiðimde Category adýna yada o kategori ile ilgili kaç tane property varsa ulaþabileyim.
+
 Category ve Product Id leri Baseentity den geliyor. Property olarak yok.
-Product ta CategoryId property si tanýmladým ama Category de Property olarka yok. BaseEntity den geliyor.
-Burda Conventions çalýþmaz. Bunu özellikle birdirmemiz gerekiyor.
+Product ta CategoryId property si tanýmladým ama Category de Property olarak yok. BaseEntity den geliyor.
+Burda Conventions çalýþmaz. Bunu özellikle birdirmemiz gerekiyor. Bunu FlentAPI ile yapýyruz. 
+Category e ICollection ile Product tanýmlar, Product a CayegoryId tanýmlarsak FluentAPI bunlarý ForeignKey yapýyor.
+Domain katmaný baþka katmanlar için kod içermez.
 Mimari yaklaþýmlarda Damin de attribute ile yapýlmaz. Bu yapýlanlarmalar PersistLayerde FluentAPI ile yapýlacak.
 
 Category ve Product nesneleri ve property lerini ekledik ve migration yaptýk.
@@ -37,12 +45,28 @@ modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(9,2
 modelBuilder.Entity<Product>().Property(p => p.Name).HasMaxLength(128).IsRequired();
 
 
-** Bire Çok Ýliþki
+** Bire Çok Ýliþki **
 modelBuilder.Entity<Product>()
-				.HasOne<Category>(p => p.Category)   / Az olan taraf => entitim Product bir Category e sahiptir.HasOne geriye navigatorbuilder dönüyor.
-				.WithMany(c => c.Products)           / Çok olan taraf ile => bu category nin product tarafý Çok, birçok producta sahiptir.
-				.HasForeignKey(p => p.CategoryId);   / Bu iliþki þu  ForeignKey üzerine kurulur.
+				.HasOne<Category>(p => p.Category)   / Product ýn sahip olduðu bir Category si var
+				.WithMany(c => c.Products)           / Ve bu iliþki çok olan taraf Product tarafýdýr. Birçok Product a sahiptir.
+				.HasForeignKey(p => p.CategoryId)    / Bu iliþki þu  ForeignKey üzerine kurulur.
+				.OnDelete(DeleteBehavior.SetNull);   / Category silinirse Product taki CategoryId null olsun dedik. Bunun için ProductId zorunluluðunu kaldýrmamýz lazým
 
+Migration ekledik
+Hata aldýk
+The property 'Product.CategoryId' cannot be marked as nullable/optional because the type of the property is 'int' which is not a nullable type.
+Any property can be marked as non-nullable/required, but only properties of nullable types can be marked as nullable/optional.
+
+int nullable bir tip deðil.Veri tabanýndaki null alaný Product entity sine çekmeye kaltýðýmda burdaki alan nullable olmadýðý için çekemiycek
+Bunun için Product taki CategoryId property sini böyle tanýmladýk. Null olabilir demiþ olduk
+public int? CategoryId { get; set; }
+
+** Bire Bir Ýliþki **
+modelBuilder.Entity<Customer>()
+					.HasOne<CustomerAddress>(c=>c.Address)
+					.WithOne(ca => ca.Customer)
+					.HasForeignKey<CustomerAddress>(ad => ad.AddressOfCustomerId)
+					.OnDelete(DeleteBehavior.Cascade);
 
 
 

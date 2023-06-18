@@ -18,7 +18,7 @@ namespace Domain
         public int Stock { get; set; }
 
         // Her Product in mutlaka Category si olsun
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
 		public float TAX { get; set; }
 
